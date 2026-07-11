@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% from 'macros.html' import render_game_card %}
+
+{% block content %}
+<div style="max-width: 800px;">
+    <h2>👤 {{ player['name'] }}</h2>
+    
+    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px;">
+        <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; text-align: center;">
+            <div style="font-size: 0.8em; color: #555;">GENERAL</div>
+            <div style="font-size: 1.5em; font-weight: bold; color: #0d47a1;">{{ "%.0f"|format(stats['gen']['r']) }}</div>
+            <small>{{ stats['gen']['g'] }} games</small>
+        </div>
+        <div style="background: #e8f5e9; padding: 15px; border-radius: 8px; text-align: center;">
+            <div style="font-size: 0.8em; color: #555;">4-PLAYER</div>
+            <div style="font-size: 1.5em; font-weight: bold; color: #1b5e20;">{{ "%.0f"|format(stats['4p']['r']) }}</div>
+            <small>{{ stats['4p']['g'] }} games</small>
+        </div>
+        <div style="background: #fff3e0; padding: 15px; border-radius: 8px; text-align: center;">
+            <div style="font-size: 0.8em; color: #555;">3-PLAYER</div>
+            <div style="font-size: 1.5em; font-weight: bold; color: #e65100;">{{ "%.0f"|format(stats['3p']['r']) }}</div>
+            <small>{{ stats['3p']['g'] }} games</small>
+        </div>
+    </div>
+
+    <div style="height: 300px; margin-bottom: 30px;">
+        <canvas id="ratingChart"></canvas>
+    </div>
+
+    <h3>Match History</h3>
+    {% for game in history %}
+        {{ render_game_card(game, player['id']) }}
+    {% endfor %}
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const ctx = document.getElementById('ratingChart');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: {{ graph_data['labels']|tojson }},
+            datasets: [
+                {
+                    label: 'General',
+                    data: {{ graph_data['gen']|tojson }},
+                    borderColor: '#0d47a1', // Blue
+                    tension: 0.3, fill: false
+                },
+                {
+                    label: '4-Player',
+                    data: {{ graph_data['4p']|tojson }},
+                    borderColor: '#2e7d32', // Green
+                    borderDash: [5,5],
+                    tension: 0.3, fill: false
+                },
+                {
+                    label: '3-Player',
+                    data: {{ graph_data['3p']|tojson }},
+                    borderColor: '#ef6c00', // Orange
+                    borderDash: [2,2],
+                    tension: 0.3, fill: false
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: { y: { suggestedMin: 0, suggestedMax: 1800 } }
+        }
+    });
+</script>
+{% endblock %}

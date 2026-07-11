@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+{% from 'macros.html' import render_game_card %}
+
+{% block content %}
+<div style="display: flex; gap: 40px; flex-wrap: wrap;">
+    <div style="flex: 1; min-width: 300px;">
+        <h2>🏆 Leaderboard (General)</h2>
+        <table>
+            <tr><th>Rank</th><th>Name</th><th>Gen. Pts</th><th>4P Pts</th><th>3P Pts</th></tr>
+            {% for p in players %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td><a href="{{ url_for('main.player_history', player_id=p['id']) }}">{{ p['name'] }}</a></td>
+                <td><strong>{{ "%.0f"|format(p['display_gen']) }}</strong></td>
+                <td style="color:#666">{{ "%.0f"|format(p['display_4p']) }}</td>
+                <td style="color:#666">{{ "%.0f"|format(p['display_3p']) }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+
+        <div style="margin: 30px 0; padding: 20px; background: #fff; border-radius: 8px; border: 1px solid #ddd;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h3 style="margin: 0;">📈 Scoreboard</h3>
+                <div>
+                    <button onclick="updateMainChart('gen')" id="btn-gen" style="font-weight:bold; background:#007bff; color:white; border:none; padding:8px 12px; border-radius:4px; cursor:pointer;">General</button>
+                    <button onclick="updateMainChart('4p')" id="btn-4p" style="background:#e0e0e0; border:none; padding:8px 12px; border-radius:4px; cursor:pointer;">4-Player</button>
+                    <button onclick="updateMainChart('3p')" id="btn-3p" style="background:#e0e0e0; border:none; padding:8px 12px; border-radius:4px; cursor:pointer;">3-Player</button>
+                </div>
+            </div>
+            <div style="height: 250px;">
+                <canvas id="mainChart"></canvas>
+            </div>
+        </div>
+        
+        <h3>Recent Games</h3>
+        {% for game in games %}
+            {{ render_game_card(game) }}
+        {% endfor %}
+    </div>
+
+    <div hidden style="flex: 1; min-width: 300px; background: #f9f9f9; padding: 20px; border-radius: 8px; height: fit-content;">
+        <h2>📝 Register Game</h2>
+        <form method="post" action="{{ url_for('main.submit_game') }}">
+            
+            <div style="margin-bottom: 20px; text-align: center;">
+                <label style="margin-right: 15px;">
+                    <input type="radio" name="game_type" value="4" checked onclick="togglePlayers(4)"> 4-Player
+                </label>
+                <label>
+                    <input type="radio" name="game_type" value="3" onclick="togglePlayers(3)"> 3-Player
+                </label>
+            </div>
+
+            <datalist id="existing_players">
+                {% for p in players %}
+                    <option value="{{ p['name'] }}"></option>
+                {% endfor %}
+            </datalist>
+
+            {% for i in range(1, 5) %}
+            <div id="row-p{{i}}" style="margin-bottom: 10px;">
+                <label>Player {{ i }}</label><br>
+                <input type="text" name="p{{i}}_name" list="existing_players" autocomplete="off" placeholder="Name" style="width: 40%">
+                <input type="number" name="p{{i}}_score" placeholder="Pts" style="width: 40%">
+            </div>
+            {% endfor %}
+            
+            <button type="submit" style="width: 100%; padding: 10px; background: #007bff; color: white; border: none; cursor: pointer;">Submit Result</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    function togglePlayers(num) {
+        const row4 = document.getElementById('row-p4');
+        const p4Inputs = row4.querySelectorAll('input');
+        
+        if (num === 3) {
+            row4.style.display = 'none';
+            p4Inputs.forEach(i => i.required = false);
+        } else {
+            row4.style.display = 'block';
+            p4Inputs.forEach(i => i.required = true);
+        }
+    }
+    // Init
+    togglePlayers(4); 
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const chartData = {{ graph_data|tojson }};
+    const ctxMain = document.getElementById('mainChart');
+
+    let mainChart = new Chart(ctxMain, {
+        type: 'line',
+        data: {
+            labels: chartData['gen'].labels,
+            datasets: chartData['gen'].datasets
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: { y: { suggestedMin: 0, suggestedMax: 1800 } },
+            plugins: { legend: { position: 'right' } }
+        }
+    });
+
+    function updateMainChart(mode) {
+        mainChart.data.labels = chartData[mode].labels;
+        mainChart.data.datasets = chartData[mode].datasets;
+        mainChart.update();
+
+        const modes = ['gen', '4p', '3p'];
+        modes.forEach(m => {
+            const btn = document.getElementById('btn-' + m);
+            if (m === mode) {
+                btn.style.background = '#007bff';
+                btn.style.color = 'white';
+                btn.style.fontWeight = 'bold';
+            } else {
+                btn.style.background = '#e0e0e0';
+                btn.style.color = 'black';
+                btn.style.fontWeight = 'normal';
+            }
+        });
+    }
+</script>
+{% endblock %}

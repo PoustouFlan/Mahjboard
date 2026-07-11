@@ -1,0 +1,76 @@
+{% macro render_game_card(game_data, target_player_id=None) %}
+<div class="game-card">
+    <div class="game-header">
+        <span class="game-id">Game #{{ game_data.id }}</span>
+        <span class="game-type badge-{{ game_data.type }}p">{{ game_data.type }}-Player</span>
+        <span class="game-date">{{ game_data.timestamp }}</span>
+    </div>
+    <table class="game-table">
+        <thead>
+            <tr>
+                <th width="5%">#</th>
+                <th width="25%">Player</th>
+                <th width="15%">Raw</th>
+                <th width="15%">Uma</th>
+                <th width="20%">Net</th>
+                <th width="20%" title="Visible Rank Points Change">Rating Δ</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for result in game_data.results %}
+            
+            {% set row_style = "" %}
+            {% if result.player_id == target_player_id %}
+                {% if loop.index == 1 %}
+                    {% set row_style = "background-color: rgba(255, 215, 0, 0.25);" %}
+                {% elif loop.index == 2 %}
+                    {% set row_style = "background-color: rgba(192, 192, 192, 0.4);" %}
+                {% elif loop.index == 3 %}
+                    {% set row_style = "background-color: rgba(205, 127, 50, 0.25);" %}
+                {% else %}
+                    {% set row_style = "background-color: rgba(220, 53, 69, 0.1);" %}
+                {% endif %}
+            {% endif %}
+
+            <tr class="rank-{{ loop.index }}" style="{{ row_style }}">
+                <td>
+                    {% if loop.index == 1 %}🥇{% elif loop.index == 2 %}🥈{% elif loop.index == 3 %}🥉{% else %}4️⃣{% endif %}
+                </td>
+
+                <td>
+                    <a href="{{ url_for('main.player_history', player_id=result.player_id) }}" class="player-link">
+                        {% if result.player_id == target_player_id %}
+                            <strong>{{ result.name }}</strong>
+                        {% else %}
+                            {{ result.name }}
+                        {% endif %}
+                    </a>
+                </td>
+
+                <td>
+                    {{ result.raw_score }}
+                </td>
+
+                <td style="color: #555;">
+                    {{ "%+.2f"|format(result.uma) }}
+                </td>
+
+                <td class="{{ 'score-pos' if result.net_score > 0 else 'score-neg' }}" style="font-weight: bold;">
+                    {{ "%+.1f"|format(result.net_score) }}
+                </td>
+
+                <td>
+                    {% if result.rank_change_general is not none %}
+                        <span style="font-weight: bold; color: {{ '#28a745' if result.rank_change_general > 0 else '#dc3545' }};">
+                            {{ "%+.0f"|format(result.rank_change_general) }}
+                        </span>
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endmacro %}

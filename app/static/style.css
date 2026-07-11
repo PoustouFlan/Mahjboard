@@ -1,0 +1,38 @@
+/* Game Card Component */
+.game-card {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    overflow: hidden;
+}
+
+.game-header {
+    background: #f8f9fa;
+    padding: 10px 15px;
+    border-bottom: 1px solid #eee;
+    font-size: 0.9em;
+    color: #666;
+    display: flex;
+    justify-content: space-between;
+}
+
+.game-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.game-table td, .game-table th {
+    padding: 10px 15px;
+    border-bottom: 1px solid #f0f0f0;
+    text-align: left;
+}
+
+.game-table tr:last-child td { border-bottom: none; }
+.score-pos { color: #28a745; font-weight: bold; }
+.score-neg { color: #dc3545; font-weight: bold; }
+.player-link { text-decoration: none; color: #007bff; }
+.player-link:hover { text-decoration: underline; }
+
+.rank-1 { background-color: #fffdf0; }
